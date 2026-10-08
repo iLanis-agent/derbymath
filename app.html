@@ -1,0 +1,100 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Derbymath - pinewood derby physics without the myths</title>
+<style>
+:root{--red:#b02020;--ink:#1d1d24;--mut:#5a5a66;--card:#f6f6f9;--ok:#0c7a3d;--bad:#b02020}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:var(--ink);background:#fff}
+header{padding:28px 20px 8px;max-width:1100px;margin:0 auto}
+h1{font-size:28px;margin:0}h1 span{color:var(--red)}
+.sub{color:var(--mut);max-width:640px;margin-top:8px;line-height:1.45}
+main{max-width:1100px;margin:24px auto;padding:0 20px;display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+.card{background:var(--card);border-radius:14px;padding:18px}
+.card h2{margin:0 0 12px;font-size:18px}
+label{display:block;font-size:13px;color:var(--mut);margin:10px 0 4px}
+input{width:100%;padding:9px 10px;border:1px solid #d5d5de;border-radius:8px;font-size:15px;background:#fff}
+button{margin-top:14px;width:100%;padding:11px;border:0;border-radius:9px;background:var(--red);color:#fff;font-size:15px;font-weight:600;cursor:pointer}
+.big{font-size:34px;font-weight:700;margin:14px 0 2px}
+.cap{font-size:13px;color:var(--mut)}
+.pill{display:inline-block;margin-top:10px;padding:4px 12px;border-radius:999px;font-size:13px;font-weight:600}
+.pill.ok{background:#e2f4e8;color:var(--ok)}.pill.bad{background:#fbe3e3;color:var(--bad)}.pill.note{background:#e8ecf8;color:#2b3f8f}
+table{width:100%;border-collapse:collapse;margin-top:12px;font-size:14px}
+td{padding:7px 0;border-bottom:1px solid #e3e3ea}td+td{text-align:right;font-weight:600}
+.err{color:var(--bad);font-size:14px;margin-top:10px;min-height:1em}
+.note{font-size:12.5px;color:var(--mut);margin-top:10px;line-height:1.4}
+</style></head><body>
+<header><h1>Derby<span>math</span></h1>
+<p class="sub">Every pack obsesses over the last tenth of a gram. The physics says center-of-mass placement and axle prep decide the race. Enter your track and car; get the exact ramp-and-flat physics, honestly labeled.</p></header>
+<main>
+<section class="card"><h2>Race time</h2>
+<label>Ramp drop (m, ~1.2 on a 4-ft track)</label><input id="r_h" type="number" step="0.05" value="1.2">
+<label>Ramp length (m, sloped part)</label><input id="r_r" type="number" step="0.1" value="4.9">
+<label>Flat runout (m)</label><input id="r_d" type="number" step="0.1" value="4.85">
+<label>Car weight (g, limit usually 141.75)</label><input id="r_m" type="number" step="0.5" value="141.75">
+<label>Center of mass ahead of rear axle (mm)</label><input id="r_x" type="number" step="1" value="25">
+<label>Axle friction coefficient (polished ~0.01)</label><input id="r_mu" type="number" step="0.001" value="0.01">
+<label>Drag area CdA (m&sup2;, ~0.001 typical)</label><input id="r_ca" type="number" step="0.0001" value="0.001">
+<button id="r_go">Run the race</button>
+<div class="err" id="r_err"></div>
+<div class="big" id="r_big">-</div><div class="cap">estimated race time</div>
+<div id="r_pill"></div>
+<table id="r_rows"></table>
+<p class="note">Point-mass model: exact gravity + Coulomb friction, velocity-dependent aero drag integrated on the flat. CM ahead of the rear axle starts that much lower on the slope - rearward weight is free energy.</p></section>
+
+<section class="card"><h2>CM sweet spot</h2>
+<label>Your CM position (mm ahead of rear axle)</label><input id="c_x" type="number" step="1" value="25">
+<button id="c_go">Sweep the CM</button>
+<div class="err" id="c_err"></div>
+<div class="big" id="c_big">-</div><div class="cap">physics-best CM position</div>
+<div id="c_pill"></div>
+<table id="c_rows"></table>
+<p class="note">Labeled guidance: the physics optimum is the rear axle itself, but a car too tail-heavy pops wheelies on the transition. Real builders hold about 25 mm (1 inch) ahead of the axle - the time cost is tiny.</p></section>
+
+<section class="card"><h2>Weight gap</h2>
+<label>Weight limit (g)</label><input id="w_max" type="number" step="0.25" value="141.75">
+<label>Your car's weight (g)</label><input id="w_cur" type="number" step="0.5" value="131">
+<button id="w_go">Price the gap</button>
+<div class="err" id="w_err"></div>
+<div class="big" id="w_big">-</div><div class="cap">seconds the missing grams cost</div>
+<div id="w_pill"></div>
+<table id="w_rows"></table>
+<p class="note">Mass cancels out of gravity and Coulomb friction - it only matters through air drag. The grams matter far less than where you put them.</p></section>
+
+<section class="card"><h2>Prep savings</h2>
+<label>Current axle friction (dry/unpolished ~0.02)</label><input id="p_n" type="number" step="0.001" value="0.02">
+<label>After prep (polished + graphite ~0.008)</label><input id="p_w" type="number" step="0.001" value="0.008">
+<button id="p_go">Price the prep</button>
+<div class="err" id="p_err"></div>
+<div class="big" id="p_big">-</div><div class="cap">seconds saved by axle prep</div>
+<div id="p_pill"></div>
+<table id="p_rows"></table>
+<p class="note">Compare this number with the weight gap above. An evening with sandpaper and graphite is worth more than a gram scale.</p></section>
+</main>
+<script src="engine.js?v=1"></script>
+<script>
+const $=id=>document.getElementById(id);
+const run=(eid,fn,draw)=>{const e=$(eid);try{e.textContent='';draw(fn());}catch(err){e.textContent=err.message;}};
+const row=(k,v)=>`<tr><td>${k}</td><td>${v}</td></tr>`;
+const pill=(id,cls,txt)=>{$(id).innerHTML=`<span class="pill ${cls}">${txt}</span>`;};
+function raceInputs(){return [+$('r_h').value,+$('r_r').value,+$('r_d').value,+$('r_m').value,+$('r_x').value,+$('r_mu').value,+$('r_ca').value];}
+function rGo(){run('r_err',()=>Derbymath.sim(...raceInputs()),r=>{
+  if(!r.finished){$('r_big').textContent='DNF';pill('r_pill','bad','stalls on the flat - too much friction for this drop');$('r_rows').innerHTML=row('ramp angle',r.thetaDeg.toFixed(1)+'&deg;')+row('ramp time',r.tRamp.toFixed(3)+' s');return;}
+  $('r_big').textContent=r.total.toFixed(3)+' s';
+  pill('r_pill','ok','finishes - top speed '+r.topKmh.toFixed(1)+' km/h');
+  $('r_rows').innerHTML=row('ramp angle',r.thetaDeg.toFixed(1)+'&deg;')+row('speed at the bottom',r.vExit.toFixed(2)+' m/s')+row('ramp time',r.tRamp.toFixed(3)+' s')+row('flat time',r.tFlat.toFixed(3)+' s');});}
+function cGo(){run('c_err',()=>{const a=raceInputs();return Derbymath.cmSweep(a[0],a[1],a[2],a[3],a[5],a[6],+$('c_x').value);},r=>{
+  $('c_big').textContent=r.bestXmm+' mm';
+  if(r.deltaS===null){pill('c_pill','bad','your current CM does not finish');}
+  else if(r.deltaS<0.001){pill('c_pill','ok','already at the physics sweet spot');}
+  else{pill('c_pill','note',(r.deltaS*1000).toFixed(1)+' ms on the table');}
+  $('c_rows').innerHTML=row('best possible time',r.bestTotal.toFixed(3)+' s')+row('time at your CM',r.currentTotal===null?'DNF':r.currentTotal.toFixed(3)+' s')+row('stability guidance','~25 mm ahead (labeled)');});}
+function wGo(){run('w_err',()=>{const a=raceInputs();return Derbymath.weightGap(a[0],a[1],a[2],+$('w_max').value,+$('w_cur').value,a[4],a[5],a[6]);},r=>{
+  $('w_big').textContent=(r.gapS*1000).toFixed(1)+' ms';
+  pill('w_pill',r.gapS<0.01?'ok':'note',r.gapS<0.01?'placement beats grams':'worth fixing - but check prep first');
+  $('w_rows').innerHTML=row('time at the limit',r.maxTotal.toFixed(3)+' s')+row('time at your weight',r.curTotal.toFixed(3)+' s')+row('grams short',r.gapG.toFixed(1)+' g');});}
+function pGo(){run('p_err',()=>{const a=raceInputs();return Derbymath.prepSavings(a[0],a[1],a[2],a[3],a[4],+$('p_n').value,+$('p_w').value,a[6]);},r=>{
+  $('p_big').textContent=(r.savedS*1000).toFixed(1)+' ms';
+  pill('p_pill',r.savedS>0.02?'ok':'note',r.savedS>0.02?'prep is your biggest lever':'already slick');
+  $('p_rows').innerHTML=row('time before prep',r.nowTotal.toFixed(3)+' s')+row('time after prep',r.newTotal.toFixed(3)+' s');});}
+$('r_go').onclick=rGo;$('c_go').onclick=cGo;$('w_go').onclick=wGo;$('p_go').onclick=pGo;
+rGo();cGo();wGo();pGo();
+</script></body></html>
